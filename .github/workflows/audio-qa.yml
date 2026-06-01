@@ -1,0 +1,86 @@
+name: Audio Quality QA Suite
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  audio-quality-tests:
+    name: Run Audio QA Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout repository
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. System-level audio library required by soundfile / librosa
+      # -----------------------------------------------------------------------
+      - name: Install system audio dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libsndfile1
+
+      # -----------------------------------------------------------------------
+      # 3. Set up the requested Python version
+      # -----------------------------------------------------------------------
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      # -----------------------------------------------------------------------
+      # 4. Create an isolated virtual environment
+      # -----------------------------------------------------------------------
+      - name: Create virtual environment
+        run: python -m venv .venv
+
+      # -----------------------------------------------------------------------
+      # 5. Install project dependencies inside the virtual environment
+      # -----------------------------------------------------------------------
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # -----------------------------------------------------------------------
+      # 6. Ensure the reports output directory exists
+      # -----------------------------------------------------------------------
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      # -----------------------------------------------------------------------
+      # 7. Execute the full pytest suite
+      #    --html generates a self-contained HTML report
+      #    -p no:warnings keeps CI output readable
+      # -----------------------------------------------------------------------
+      - name: Run pytest suite
+        run: |
+          source .venv/bin/activate
+          pytest tests/ \
+            --html=reports/test-report-py${{ matrix.python-version }}.html \
+            --self-contained-html \
+            -p no:warnings
+
+      # -----------------------------------------------------------------------
+      # 8. Upload the HTML report as a build artifact (always, even on failure)
+      # -----------------------------------------------------------------------
+      - name: Upload test report artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-report-py${{ matrix.python-version }}
+          path: reports/test-report-py${{ matrix.python-version }}.html
+          retention-days: 30
