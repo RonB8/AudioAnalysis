@@ -1,0 +1,8 @@
+{
+  "tests/test_audio_quality.py::TestSNREstimation::test_clean_audio_has_acceptable_snr": true,
+  "tests/test_audio_quality.py::TestFullQualityReport::test_clean_audio_passes_full_report": true,
+  "tests/test_audio_quality.py::TestCleanAudioSuite::test_acceptable_snr[clean_speech.wav]": true,
+  "tests/test_audio_quality.py::TestCleanAudioSuite::test_full_quality_report_passes[clean_speech.wav]": true,
+  "tests/test_audio_quality.py::TestCleanAudioSuite::test_no_clipping[A2.wav]": true,
+  "tests/test_audio_quality.py::TestCleanAudioSuite::test_full_quality_report_passes[A2.wav]": true
+}
